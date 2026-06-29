@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Admin Panel</title></head>
+<body>
+    <h2>Upload Gambar Produk</h2>
+    <input type="file" id="imageUploader" accept="image/*">
+    <button onclick="saveImage()">Update Gambar Produk</button>
+
+    <script>
+        function saveImage() {
+            const file = document.getElementById('imageUploader').files[0];
+            if (!file) return alert("Pilih gambar dulu!");
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                localStorage.setItem('productImage', e.target.result);
+                alert("Gambar berhasil diupdate! Silakan refresh halaman utama.");
+            }
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
